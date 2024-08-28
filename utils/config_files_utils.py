@@ -1,4 +1,5 @@
 from yaml import load, dump
+import yaml
 import os
 
 
@@ -16,7 +17,7 @@ def get_params_values(args, key, default=None):
 #yaml_file = 'configs/test.yaml'
 def read_yaml(yaml_file):
     with open(yaml_file, 'r') as config_file:
-        yaml_dict = load(config_file)
+        yaml_dict = load(config_file, Loader=yaml.SafeLoader)
     return yaml_dict
 
 
