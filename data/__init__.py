@@ -8,7 +8,7 @@ from data.PASTIS24.data_transforms import PASTIS_segmentation_transform
 from utils.config_files_utils import get_params_values, read_yaml
 
 
-DATASET_INFO = read_yaml("data/datasets.yaml")
+DATASET_INFO = read_yaml("tsvit/data/datasets.yaml")
 
 
 def get_dataloaders(config):
