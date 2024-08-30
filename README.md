@@ -1,5 +1,3 @@
-** This is a forked version of the DeepSatModels repository. It contains a few patches and is used in (VERS)[https://github.com/sede-x/biovers_cover_crop_atlas] **
-
 # Repository for Land Cover Recognition Model Training Using Satellite Imagery
 
 Welcome to the dedicated repository for advancing land cover recognition through the application of state-of-the-art models on satellite imagery. This repository serves as a comprehensive resource for researchers and practitioners in the field, providing access to research code, detailed setup instructions, and guidelines for conducting experiments with satellite image timeseries data.
