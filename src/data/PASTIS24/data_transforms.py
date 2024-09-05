@@ -61,9 +61,27 @@ class ToTensor(object):
 
     def __call__(self, sample):
         tensor_sample = {}
-        tensor_sample['inputs'] = torch.tensor(sample['img']).to(torch.float32)
-        tensor_sample['labels'] = torch.tensor(sample['labels'][0].astype(np.float32)).to(torch.float32).unsqueeze(-1)
-        tensor_sample['doy'] = torch.tensor(np.array(sample['doy'])).to(torch.float32)
+        # sample['img'].dtype === np.int16
+        # sample['img'].shape === (43, 10, 24, 24)
+
+        # Converting using Numpy before Torch, due to errors
+        sample['img'] = np.ascontiguousarray(sample['img'].astype(np.float32))
+        sample['labels'] = np.ascontiguousarray(sample['labels'].astype(np.float32))
+        sample['doy'] = np.ascontiguousarray(sample['doy'].astype(np.float32))
+
+        print("TEST POINT 1")
+        # tensor_sample['inputs'] = tensor_sample['inputs'].to(torch.float32)
+        tensor_sample['inputs'] = torch.tensor(sample['img'], dtype=torch.float32)
+
+        print("TEST POINT 2")
+        # tensor_sample['labels'] = torch.tensor(sample['labels'][0].astype(np.float32)).to(torch.float32).unsqueeze(-1)
+        tensor_sample['labels'] = torch.tensor(sample['labels'][0].astype(np.float32), dtype=torch.float32).unsqueeze(-1)
+
+        print("TEST POINT 3")
+        # tensor_sample['doy'] = torch.tensor(np.array(sample['doy'])).to(torch.float32)
+        tensor_sample['doy'] = torch.tensor(np.array(sample['doy']), dtype=torch.float32)
+
+        print("TEST POINT 4")
         return tensor_sample
 
 

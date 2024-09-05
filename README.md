@@ -17,17 +17,46 @@ of crop types exhibiti performance gains along object boundaries. Additional inf
 For the initial setup, please follow the instructions for downloading and installing Miniconda available at the [official Conda documentation](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html).
 
 ### Environment Configuration
+
 1. **Creating the Environment**: Navigate to the code directory in your terminal and create the environment using the provided `.yml` file by executing:
 
-        conda env create -f deepsatmodels_env.yml
+```bash
+conda env create -f environment/deepsatmodels_env.yml
+```
 
 2. **Activating the Environment**: Activate the newly created environment with:
 
-        source activate deepsatmodels
+```bash
+conda activate deepsatmodels
+```
 
 3. **PyTorch Installation**: Install the required version of PyTorch along with torchvision and torchaudio by running:
 
-        conda install pytorch torchvision torchaudio cudatoolkit=10.1 -c pytorch-nightly
+```bash
+conda install pytorch==1.7.1 torchvision==0.8.2 torchaudio==0.7.2 cudatoolkit=10.1 -c pytorch -y
+conda install conda-forge::timm==0.4.12 -y
+```
+
+4. **Extra Installations**: To make life easier:
+
+```bash
+pip install azureml-core azure-ai-ml azureml-fsspec
+
+conda install conda-forge::python-dotenv -y
+
+<!-- pip install jupyter notebook -->
+conda install pip ipykernel ipython jupyter notebook -y
+python -m ipykernel install --user --name deepsatmodels --display-name "DeepSatModels"
+```
+
+## Train Segmentation Models via AzureML Job
+
+Run:
+
+```bash
+conda activate deepsatmodels
+python src/aml_job/submit_training.py
+```
 
 
 ## Experiment Setup

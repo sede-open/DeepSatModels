@@ -9,6 +9,7 @@ def confusion_mat(predicted, labels, n_classes):  # , unk_masks=None):
     labels |
     """
 
+    print(f"Making Confusion Matrix for labels of shape {labels.shape} and predictions of shape {predicted.shape}")
     cm = confusion_matrix(labels, predicted)
     # cm_side = cm.shape[0]
     rem = 0

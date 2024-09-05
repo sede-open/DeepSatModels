@@ -1,3 +1,4 @@
+import os
 import torch
 from data.MTLCC.dataloader import get_dataloader as get_mtlcc_dataloader
 from data.MTLCC.data_transforms import MTLCC_transform
@@ -8,12 +9,10 @@ from data.PASTIS24.data_transforms import PASTIS_segmentation_transform
 from utils.config_files_utils import get_params_values, read_yaml
 
 
-DATASET_INFO = read_yaml("data/datasets.yaml")
+DATASET_INFO = None
 
 
-def get_dataloaders(config):
-
-
+def get_dataloaders(config, base_dir: str=None):
     model_config = config['MODEL']
     train_config = config['DATASETS']['train']
     train_config['bidir_input'] = model_config['architecture'] == "ConvBiRNN"
@@ -22,8 +21,11 @@ def get_dataloaders(config):
     dataloaders = {}
     
     # TRAIN data -------------------------------------------------------------------------------------------------------
-    train_config['base_dir'] = DATASET_INFO[train_config['dataset']]['basedir']
+    train_config['base_dir'] = base_dir or DATASET_INFO[train_config['dataset']]['basedir']
     train_config['paths'] = DATASET_INFO[train_config['dataset']]['paths_train']
+    if base_dir:
+        train_config['paths'] = os.path.join(base_dir, train_config['paths'])
+        print(f"Updated `train_config['paths']` = {train_config['paths']}")
     if train_config['dataset'] == 'MTLCC':
         dataloaders['train'] = get_mtlcc_dataloader(
             paths_file=train_config['paths'], root_dir=train_config['base_dir'],
@@ -41,23 +43,29 @@ def get_dataloaders(config):
             batch_size=train_config['batch_size'], shuffle=True, num_workers=train_config['num_workers'])
 
     # EVAL data --------------------------------------------------------------------------------------------------------
-    eval_config['base_dir'] = DATASET_INFO[eval_config['dataset']]['basedir']
+    eval_config['base_dir'] = base_dir or DATASET_INFO[eval_config['dataset']]['basedir']
     eval_config['paths'] = DATASET_INFO[eval_config['dataset']]['paths_eval']
+    if base_dir:
+        eval_config['paths'] = os.path.join(base_dir, eval_config['paths'])
+        print(f"Updated `eval_config['paths']` = {eval_config['paths']}")
     if eval_config['dataset'] == 'MTLCC':
-        dataloaders['eval'] = get_mtlcc_dataloader(
-            paths_file=eval_config['paths'], root_dir=eval_config['base_dir'],
-            transform=MTLCC_transform(model_config, eval_config, is_training=False),
-            batch_size=eval_config['batch_size'], shuffle=False, num_workers=eval_config['num_workers'])
+        pass
+        # dataloaders['eval'] = get_mtlcc_dataloader(
+        #     paths_file=eval_config['paths'], root_dir=eval_config['base_dir'],
+        #     transform=MTLCC_transform(model_config, eval_config, is_training=False),
+        #     batch_size=eval_config['batch_size'], shuffle=False, num_workers=eval_config['num_workers'])
     elif 'PASTIS' in eval_config['dataset']:
-        dataloaders['eval'] = get_pastis_dataloader(
-            paths_file=eval_config['paths'], root_dir=eval_config['base_dir'],
-            transform=PASTIS_segmentation_transform(model_config, is_training=False),
-            batch_size=eval_config['batch_size'], shuffle=False, num_workers=eval_config['num_workers'])
+        print("LOADING PASTIS EVAL DATA - SKIPPED")
+        # dataloaders['eval'] = get_pastis_dataloader(
+        #     paths_file=eval_config['paths'], root_dir=eval_config['base_dir'],
+        #     transform=PASTIS_segmentation_transform(model_config, is_training=False),
+        #     batch_size=eval_config['batch_size'], shuffle=False, num_workers=eval_config['num_workers'])
     else:
-        dataloaders['eval'] = get_france_dataloader(
-            paths_file=eval_config['paths'], root_dir=eval_config['base_dir'],
-            transform=France_segmentation_transform(model_config, eval_config, is_training=True),
-            batch_size=eval_config['batch_size'], shuffle=False, num_workers=eval_config['num_workers'])
+        pass
+        # dataloaders['eval'] = get_france_dataloader(
+        #     paths_file=eval_config['paths'], root_dir=eval_config['base_dir'],
+        #     transform=France_segmentation_transform(model_config, eval_config, is_training=True),
+        #     batch_size=eval_config['batch_size'], shuffle=False, num_workers=eval_config['num_workers'])
 
     return dataloaders
 
@@ -122,3 +130,16 @@ def get_loss_data_input(config):
                     return lambda sample, device: cscl_ground_truths(sample, device, return_masks=True)
 
     return segmentation_ground_truths
+
+
+def load_dataset_info():
+    global DATASET_INFO
+    if "DATASET_INFO_PATH" in os.environ:
+        dataset_info_path: str = os.environ["DATASET_INFO_PATH"]
+    else:
+        dataset_info_path: str = os.path.join("..", "datasets.yaml")
+    print(f"Loading Dataset YAML from `{dataset_info_path}`...")
+    DATASET_INFO = read_yaml(yaml_file=dataset_info_path)
+
+
+load_dataset_info()

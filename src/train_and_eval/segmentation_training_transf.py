@@ -1,23 +1,32 @@
-import sys
+# 
+# Run:
+# ```bash
+# export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+# python src/train_and_eval/segmentation_training_transf.py --config configs/PASTIS24/TSViT-S_fold1.yaml --device 0
+# ```
+# 
+
 import os
-sys.path.insert(0, os.getcwd())
+import sys
+sys.path.insert(0, os.path.join(os.getcwd(), "src") )
+
 import argparse
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from utils.lr_scheduler import build_scheduler
 from torch.utils.tensorboard import SummaryWriter
-import numpy as np
-import os
-from models import get_model
-from utils.config_files_utils import read_yaml, copy_yaml, get_params_values
-from utils.torch_utils import get_device, get_net_trainable_params, load_from_checkpoint
+
 from data import get_dataloaders
+from data import get_loss_data_input
+from utils.config_files_utils import read_yaml, copy_yaml, get_params_values
+from utils.lr_scheduler import build_scheduler
+from utils.torch_utils import get_device, get_net_trainable_params, load_from_checkpoint
+from utils.summaries import write_mean_summaries, write_class_summaries
 from metrics.torch_metrics import get_mean_metrics
 from metrics.numpy_metrics import get_classification_metrics, get_per_class_loss
 from metrics.loss_functions import get_loss
-from utils.summaries import write_mean_summaries, write_class_summaries
-from data import get_loss_data_input
+from models import get_model
 
 
 def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
@@ -138,6 +147,7 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
     BEST_IOU = 0
     net.train()
     for epoch in range(start_epoch, start_epoch + num_epochs):  # loop over the dataset multiple times
+        print(f"Epoch `{epoch}`")
         for step, sample in enumerate(dataloaders['train']):
             abs_step = start_global + (epoch - start_epoch) * num_steps_train + step
             logits, ground_truth, loss = train_step(net, sample, loss_fn, optimizer, device, loss_input_fn=loss_input_fn)
@@ -184,6 +194,28 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
         scheduler.step_update(abs_step)
 
 
+def run(config_file: str, device_ids: list, base_dir: str=None, lin_cls: bool=False):
+    device = get_device(device_ids, allow_cpu=False)
+
+    print("Reading Config YAML...")
+    config = read_yaml(config_file)
+    config['local_device_ids'] = device_ids
+    print()
+
+    print("Loading Dataloaders...")
+    dataloaders = get_dataloaders(config, base_dir=base_dir)
+    print()
+
+    print("Loading Model...")
+    net = get_model(config, device)
+    print()
+
+    print("Starting Training & Evaluation...")
+    train_and_evaluate(net, dataloaders, config, device)
+    print()
+
+    print("DONE")
+
 
 if __name__ == "__main__":
 
@@ -200,13 +232,15 @@ if __name__ == "__main__":
     device_ids = [int(d) for d in args.device.split(',')]
     lin_cls = args.lin
 
-    device = get_device(device_ids, allow_cpu=False)
+    run(config_file=config_file, device_ids=device_ids, lin_cls=lin_cls)
 
-    config = read_yaml(config_file)
-    config['local_device_ids'] = device_ids
+    # device = get_device(device_ids, allow_cpu=False)
 
-    dataloaders = get_dataloaders(config)
+    # config = read_yaml(config_file)
+    # config['local_device_ids'] = device_ids
 
-    net = get_model(config, device)
+    # dataloaders = get_dataloaders(config)
 
-    train_and_evaluate(net, dataloaders, config, device)
+    # net = get_model(config, device)
+
+    # train_and_evaluate(net, dataloaders, config, device)

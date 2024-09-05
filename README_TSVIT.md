@@ -11,14 +11,17 @@ To begin model training or evaluation, adjust the `.yaml` configuration files as
 
 To train for semantic segmentation, execute the following command, replacing `**` with the appropriate directory names:
 
-        python train_and_eval/segmentation_training_transf.py --config_file configs/**/TSViT.yaml --gpu_ids 0,1
-    
+        export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+        python src/train_and_eval/segmentation_training_transf.py --config configs/PASTIS24/TSViT-S_fold1.yaml --device 0
+
 ### Object Classification
 
 For object classification tasks, use the command below:
 
-        python train_and_eval/classification_train_transf.py --config_file configs/**/TSViT_cls.yaml --gpu_ids 0,1
-        
+        python src/train_and_eval/classification_train_transf.py --config configs/PASTIS24/TSViT_cls.yaml --device 0
+
+Note: This runs out of memory on GPUs with 16GB VRAM.
+
 ## PASTIS Benchmark
 
 ### Dataset Overview
@@ -45,14 +48,14 @@ PASTIS24
 
 To recreate the dataset from the original PASTIS benchmark, run:
 
-        python data/PASTIS24/data2windows.py --rootdir <...> --savedir <...> --HWout 24
+        python src/data/PASTIS24/data2windows.py --rootdir <...> --savedir <...> --HWout 24
 
 Please ensure to cite the PASTIS dataset appropriately when using PASTIS24 in your research.
 
 ### Experiments
 Run the following to train TSViT on each of the five folds of PASTIS24 
 
-	python train_and_eval/segmentation_training_transf.py --config_file configs/PASTIS24/TSViT[-S]_fold*.yaml --gpu_ids 0,1
+	python src/train_and_eval/segmentation_training_transf.py --config configs/PASTIS24/TSViT-S_fold1.yaml --device 0
 
 Omit the "-S" for the standard TSViT configuration, or include it (TSViT-S) for training the small architecture.
 #### Results

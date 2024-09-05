@@ -39,6 +39,7 @@ def get_mean_metrics(logits, labels, n_classes, loss, epoch=0, step=0, unk_masks
     # unique_predictions = predicted.unique().cpu().numpy()
     predicted = predicted.reshape(-1).cpu().numpy()
     labels = labels.reshape(-1).cpu().numpy()
+    assert predicted.shape[0] == labels.shape[0], "There needs to be the same number of predictions and ground truth"
     if unk_masks is not None:
         unk_masks = unk_masks.reshape(-1).cpu().numpy()
     acc, precision, recall, F1, IOU = get_classification_metrics(

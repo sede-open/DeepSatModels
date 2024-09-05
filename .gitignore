@@ -1,0 +1,5 @@
+.ipynotebooks
+.amlignore*
+*.amltmp
+.ipynb_aml_checkpoints
+.env
