@@ -1,10 +1,10 @@
 import torch
-from deepsatmodels.data.MTLCC.dataloader import get_dataloader as get_mtlcc_dataloader
-from deepsatmodels.data.MTLCC.data_transforms import MTLCC_transform
-from deepsatmodels.data.France.dataloader import get_dataloader as get_france_dataloader
-from deepsatmodels.data.France.data_transforms import France_segmentation_transform
-from deepsatmodels.data.PASTIS24.dataloader import get_dataloader as get_pastis_dataloader
-from deepsatmodels.data.PASTIS24.data_transforms import PASTIS_segmentation_transform
+from .MTLCC.dataloader import get_dataloader as get_mtlcc_dataloader
+from .MTLCC.data_transforms import MTLCC_transform
+from .France.dataloader import get_dataloader as get_france_dataloader
+from .France.data_transforms import France_segmentation_transform
+from .PASTIS24.dataloader import get_dataloader as get_pastis_dataloader
+from .PASTIS24.data_transforms import PASTIS_segmentation_transform
 from deepsatmodels.utils.config_files_utils import get_params_values, read_yaml
 
 

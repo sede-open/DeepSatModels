@@ -2,8 +2,8 @@
 # from deepsatmodels.models.UNet3D.unet3df import UNet3D_CSCL
 # from deepsatmodels.models.CropTypeMapping.models import FCN_CRNN
 # from deepsatmodels.models.BiConvRNN.biconv_rnn import BiRNNSequentialEncoder
-from deepsatmodels.models.TSViT.TSViTdense import TSViT
-from deepsatmodels.models.TSViT.TSViTcls import TSViTcls
+from .TSViT.TSViTdense import TSViT
+from .TSViT.TSViTcls import TSViTcls
 
 def get_model(config, device):
     model_config = config['MODEL']
