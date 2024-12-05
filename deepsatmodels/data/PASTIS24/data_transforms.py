@@ -9,7 +9,7 @@ from deepsatmodels.utils.config_files_utils import get_params_values
 from scipy import ndimage
 
 
-def PASTIS_segmentation_transform(model_config, is_training):
+def PASTIS_segmentation_transform(model_config, data_config, is_training):
     """
     """
     dataset_img_res = 24
@@ -19,7 +19,7 @@ def PASTIS_segmentation_transform(model_config, is_training):
     inputs_backward = get_params_values(model_config, 'inputs_backward', False)
     transform_list = []
     transform_list.append(ToTensor())                                  # data from numpy arrays to torch.float32
-    transform_list.append(Normalize())                                 # normalize all inputs individually
+    transform_list.append(Normalize(model_config, data_config))                      # normalize all inputs individually
 
     if dataset_img_res != input_img_res:
         transform_list.append(
@@ -27,7 +27,7 @@ def PASTIS_segmentation_transform(model_config, is_training):
 
     transform_list.append(TileDates(H=model_config['img_res'], W=model_config['img_res'], doy_bins=None))                       # tile day and year to shape TxWxHx1
     transform_list.append(CutOrPad(max_seq_len=max_seq_len, random_sample=False, from_start=True))  # pad with zeros to maximum sequence length
-    transform_list.append(UnkMask(unk_class=19, ground_truth_target='labels'))  # extract unknown label mask
+    transform_list.append(UnkMask(unk_class=7, ground_truth_target='labels'))  # extract unknown label mask
 
     if inputs_backward:
         transform_list.append(AddBackwardInputs())
@@ -35,6 +35,28 @@ def PASTIS_segmentation_transform(model_config, is_training):
     transform_list.append(ToTHWC())
 
     return transforms.Compose(transform_list)
+
+def PASTIS_segmentation_transform_inference(model_config, data_config, is_training):
+    """
+    """
+    dataset_img_res = 24
+    input_img_res = model_config['img_res']
+    ground_truths = ['labels']
+    max_seq_len = model_config['max_seq_len']
+    transform_list = []
+    transform_list.append(ToTensorInference())                                  # data from numpy arrays to torch.float32
+    transform_list.append(Normalize(data_config))                      # normalize all inputs individually
+
+    if dataset_img_res != input_img_res:
+        transform_list.append(
+            Crop(img_size=dataset_img_res, crop_size=input_img_res, random=is_training, ground_truths=ground_truths))  # random crop
+
+    transform_list.append(TileDates(H=model_config['img_res'], W=model_config['img_res'], doy_bins=None))                       # tile day and year to shape TxWxHx1
+    transform_list.append(CutOrPad(max_seq_len=max_seq_len, random_sample=False, from_start=True))  # pad with zeros to maximum sequence length
+    transform_list.append(ToTHWC())
+
+    return transforms.Compose(transform_list)
+
 
 
 class ToTHWC(object):
@@ -64,6 +86,32 @@ class ToTensor(object):
         tensor_sample['inputs'] = torch.tensor(sample['img']).to(torch.float32)
         tensor_sample['labels'] = torch.tensor(sample['labels'][0].astype(np.float32)).to(torch.float32).unsqueeze(-1)
         tensor_sample['doy'] = torch.tensor(np.array(sample['doy'])).to(torch.float32)
+
+        # tensor_sample["doy"] = torch.tensor(
+        #     np.array([int(date.strftime(format='%Y%m%d')) for date in sample["dates"]])
+        # ).to(torch.float32)
+
+        # tensor_sample["doy"] = torch.tensor(
+        #     np.array([int(date.strftime(format='%s')) for date in sample["dates"]])
+        # ).to(torch.float32)
+
+        return tensor_sample
+
+
+class ToTensorInference(object):
+    """
+    Convert ndarrays in sample to Tensors.
+    items in  : x10, x20, x60, day, year, labels
+    items out : x10, x20, x60, day, year, labels
+    """
+    def __init__(self, label_type='groups', ground_truths=[]):
+        self.label_type = label_type
+        self.ground_truths = ground_truths
+
+    def __call__(self, sample):
+        tensor_sample = {}
+        tensor_sample['inputs'] = torch.tensor(sample['image']).to(torch.float32)
+        tensor_sample['doy'] = torch.tensor(np.array([d.timetuple().tm_yday for d in sample['dates']])).to(torch.float32)
         return tensor_sample
 
 
@@ -99,32 +147,16 @@ class Normalize(object):
     items in  : x10, x20, x60, day, year, labels
     items out : x10, x20, x60, day, year, labels
     """
-    def __init__(self):
-        self.mean_fold1 = np.array([[[[1165.9398193359375]],
-                                   [[1375.6534423828125]],
-                                   [[1429.2191162109375]],
-                                   [[1764.798828125]],
-                                   [[2719.273193359375]],
-                                   [[3063.61181640625]],
-                                   [[3205.90185546875]],
-                                   [[3319.109619140625]],
-                                   [[2422.904296875]],
-                                   [[1639.370361328125]]]]).astype(np.float32)
-        self.std_fold1 = np.array([[[[1942.6156005859375]],
-                                  [[1881.9234619140625]],
-                                  [[1959.3798828125]],
-                                  [[1867.2239990234375]],
-                                  [[1754.5850830078125]],
-                                  [[1769.4046630859375]],
-                                  [[1784.860595703125]],
-                                  [[1767.7100830078125]],
-                                  [[1458.963623046875]],
-                                  [[1299.2833251953125]]]]).astype(np.float32)
+    def __init__(self, model_config, data_config):
+        self.mean_fold1 = np.array(data_config['mean']).reshape(1, model_config['num_channels']-1, 1, 1).astype(np.float32)
+        self.std_fold1 = np.array(data_config['std']).reshape(1, model_config['num_channels']-1, 1, 1).astype(np.float32)
+
     def __call__(self, sample):
         # print('mean: ', sample['img'].mean(dim=(0,2,3)))
         # print('std : ', sample['img'].std(dim=(0,2,3)))
         sample['inputs'] = (sample['inputs'] - self.mean_fold1) / self.std_fold1
-        sample['doy'] = sample['doy'] / 365.0001
+        # sample['doy'] = (sample['doy'] - 20160101) / 30101
+        sample["doy"] = sample["doy"] / 365.0001
         return sample
 
 

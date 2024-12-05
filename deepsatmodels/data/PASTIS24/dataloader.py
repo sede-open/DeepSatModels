@@ -62,6 +62,9 @@ class SatImDataset(Dataset):
         with open(img_name, 'rb') as handle:
             sample = pickle.load(handle, encoding='latin1')
 
+        # Uncomment to use only 2 bands
+        # sample['img'] = sample['img'][:,[2,6],:,:]
+
         if self.transform:
             sample = self.transform(sample)
 

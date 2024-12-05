@@ -32,7 +32,7 @@ def get_dataloaders(config):
     elif 'PASTIS' in train_config['dataset']:
         dataloaders['train'] = get_pastis_dataloader(
             paths_file=train_config['paths'], root_dir=train_config['base_dir'],
-            transform=PASTIS_segmentation_transform(model_config, is_training=True),
+            transform=PASTIS_segmentation_transform(model_config, config['DATASETS'], is_training=True),
             batch_size=train_config['batch_size'], shuffle=True, num_workers=train_config['num_workers'])
     else:
         dataloaders['train'] = get_france_dataloader(
@@ -51,7 +51,7 @@ def get_dataloaders(config):
     elif 'PASTIS' in eval_config['dataset']:
         dataloaders['eval'] = get_pastis_dataloader(
             paths_file=eval_config['paths'], root_dir=eval_config['base_dir'],
-            transform=PASTIS_segmentation_transform(model_config, is_training=False),
+            transform=PASTIS_segmentation_transform(model_config, config['DATASETS'], is_training=False),
             batch_size=eval_config['batch_size'], shuffle=False, num_workers=eval_config['num_workers'])
     else:
         dataloaders['eval'] = get_france_dataloader(
