@@ -12,7 +12,7 @@ name = "deepsatmodels"
 version = "0.0.1"
 description = "Land Cover Recognition Model Training Using Satellite Imagery"
 
-[tool.poetry.dependencies]
+[dependencies]
 python = ">=3.10,<3.11"
 _libgcc_mutex = "0.1"
 blas = "1.0"
@@ -83,6 +83,7 @@ xz = "5.2.5"
 yaml = "0.2.5"
 zlib = "1.2.11"
 zstd = "1.4.5"
+einops = "0.3.2"
 
 [tool.poetry.dev.dependencies]
 absl-py = "0.9.0"
@@ -134,7 +135,7 @@ urllib3 = "1.25.10"
 werkzeug = "1.0.1"
 wrapt = "1.12.1"
 yapf = "0.30.0"
-einops = "0.3.2"
+
 
 
 [tool.setuptools.packages.find]
